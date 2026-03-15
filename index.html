@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastel da Hora - Sistema de Pedidos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff4e00;
+            --primary-dark: #e63d00;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e63946;
+            --bg-light: #f4f7f6;
+            --text-main: #333;
+            --text-muted: #7f8c8d;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --radius: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg-light);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .home-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Topbar */
+        .topbar {
+            height: 70px;
+            background: white;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'Franklin Gothic Medium', Arial, sans-serif;
+        }
+
+        .menu {
+            display: flex;
+            gap: 10px;
+        }
+
+        .menu a {
+            padding: 8px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+
+        .menu a:hover {
+            background: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .btn-daily-earnings {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 20px;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(255, 78, 0, 0.2);
+        }
+
+        .btn-daily-earnings:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Layout */
+        .content {
+            display: flex;
+            padding: 25px;
+            gap: 25px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .right-panel {
+            width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            border: 1px solid #eee;
+        }
+
+        .right-panel.active {
+            display: flex;
+        }
+
+        .right-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .right-panel-title {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .close-panel-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-panel-btn:hover {
+            color: var(--danger);
+        }
+
+        .section-title {
+            margin: 0 0 15px;
+            color: var(--secondary);
+            font-size: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabelas */
+        .table {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 120px 120px;
+            padding: 16px;
+            border-bottom: 1px solid #f1f1f1;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+
+        .table-row:hover {
+            background-color: #fff9f6;
+            transform: translateX(5px);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-empty {
+            padding: 30px;
+            color: var(--text-muted);
+            text-align: center;
+            font-style: italic;
+        }
+
+        .table-id {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .table-client {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 16px;
+        }
+
+        .table-items {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .table-price {
+            text-align: right;
+            font-weight: 800;
+            color: var(--success);
+            font-size: 17px;
+        }
+
+        /* Inputs e Botões */
+        .right-panel label {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+
+        .right-panel input,
+        .right-panel select,
+        .right-panel textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .right-panel input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            margin-top: 10px;
+            background: var(--primary);
+            width: 100%;
+            padding: 14px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 78, 0, 0.2);
+        }
+
+        .btn.danger { background: var(--danger); }
+        .btn.success { background: var(--success); }
+
+        /* Lista de Itens */
+        .items-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .item-price {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .item-remove-btn {
+            background: #fee2e2;
+            color: var(--danger);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .item-remove-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .total-box {
+            font-size: 22px;
+            font-weight: 800;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            border: 2px solid #eee;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .btn-novo-pedido {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(255, 78, 0, 0.2);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-title {
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        /* Pesquisa de Pastéis */
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .pasteis-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 50;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #eee;
+        }
+
+        .pasteis-list.active { display: block; }
+
+        .pastel-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .pastel-item:hover { background: #fff9f6; }
+
+        .pastel-item-name { font-weight: 600; }
+        .pastel-item-price { font-weight: 700; color: var(--success); }
+
+        @media (max-width: 1024px) {
+            .content { flex-direction: column; overflow-y: auto; }
+            .right-panel { width: 100%; }
+            .home-container { height: auto; min-height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="home-container">
+        <div class="topbar">
+            <div class="logo">PASTEL DA HORA</div>
+            <div class="menu">
+                <a onclick="location.reload()">Início</a>
+                <button class="btn-daily-earnings" onclick="showDailyEarnings()">Ganhos de Hoje: R$ <span id="dailyEarningsAmount">0.00</span></button>
+            </div>
+            <div class="user-area">
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">GANHOS DO MÊS</div>
+                    <div style="font-size: 18px; font-weight: 800; color: var(--success);" onclick="showMonthlyEarnings()">R$ <span id="monthlyEarningsAmount">0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="left-panel">
+                <div>
+                    <div class="header-section" style="margin-bottom: 20px;">
+                        <h2 class="header-title">Pedidos em Andamento</h2>
+                        <button class="btn-novo-pedido" onclick="openNewOrderModal()">+ Novo Pedido</button>
+                    </div>
+                    <div class="table" id="inProgressTable"></div>
+                </div>
+
+                <div>
+                    <div class="header-section" style="margin-bottom: 20px;">
+                        <h2 class="header-title">Últimos Finalizados</h2>
+                    </div>
+                    <div class="table" id="finishedTable"></div>
+                </div>
+            </div>
+
+            <div class="right-panel" id="rightPanel">
+                <div class="right-panel-header">
+                    <span class="right-panel-title">Detalhes do Pedido</span>
+                    <button class="close-panel-btn" onclick="closeRightPanel()">&times;</button>
+                </div>
+                <div id="rightPanelContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Pedido -->
+    <div class="modal" id="newOrderModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Novo Pedido</h2>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 700;">Nome do Cliente</label>
+                <input type="text" id="cliente" placeholder="Nome do cliente" style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 700;">Atendente</label>
+                <select id="atendente" style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px;">
+                    <option value="Atendente 1">Deivid</option>
+                    <option value="Atendente 2">Larissa</option>
+                    <option value="Caixa">Nadson</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 700;">Observações</label>
+                <textarea id="comentario" placeholder="Observações..." style="width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; height: 80px;"></textarea>
+            </div>
+            <button class="btn" onclick="handleCreateOrder()">Criar Pedido</button>
+            <button class="btn" style="background: #ccc; margin-top: 10px;" onclick="closeNewOrderModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // MECÂNICAS ORIGINAIS PRESERVADAS
+        let orders = [];
+        let nextOrderId = 1;
+        let selectedOrder = null;
+        let monthlyEarnings = 0.00;
+        let lastMonthlyReset = new Date().toISOString().split('T')[0];
+
+        // Fuso horário de Brasília (GMT-3)
+        const BRASILIA_OFFSET = -3;
+
+        function getBrasiliaTime(date = new Date()) {
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            return new Date(utc + (3600000 * BRASILIA_OFFSET));
+        }
+
+        let pasteis = [
+            { nome: "Pastel de Camarao queijo", preco: 15.00 },
+            // ----- CARNE -----
+  { nome: "Carne (P)", preco: 6.00 },
+  { nome: "Carne (M)", preco: 12.00 },
+  { nome: "Carne c/ Catupiry (P)", preco: 8.00 },
+  { nome: "Carne c/ Catupiry (M)", preco: 14.00 },
+  { nome: "Carne c/ Cream Cheese (P)", preco: 13.00 },
+  { nome: "Carne c/ Cream Cheese (M)", preco: 19.00 },
+  { nome: "Carne c/ Queijo Muçarela (P)", preco: 10.00 },
+  { nome: "Carne c/ Queijo Muçarela (M)", preco: 16.00 },
+  { nome: "Carne c/ Cheddar (P)", preco: 13.00 },
+  { nome: "Carne c/ Cheddar (M)", preco: 16.00 },
+  { nome: "Carne do Sol c/ Queijo Coalho (P)", preco: 12.00 },
+  { nome: "Carne do Sol c/ Queijo Coalho (M)", preco: 18.00 },
+  { nome: "Carne Especial (P)", preco: 15.00 },
+  { nome: "Carne Especial (M)", preco: 20.00 },
+  // ----- CHARQUE -----
+  { nome: "Charque (P)", preco: 10.00 },
+  { nome: "Charque (M)", preco: 16.00 },
+  { nome: "Charque c/ Queijo Muçarela (P)", preco: 12.00 },
+  { nome: "Charque c/ Queijo Muçarela (M)", preco: 18.00 },
+  { nome: "Charque c/ Cream Cheese (P)", preco: 15.00 },
+  { nome: "Charque c/ Cream Cheese (M)", preco: 21.00 },
+  { nome: "Charque c/ Cheddar (P)", preco: 15.00 },
+  { nome: "Charque c/ Cheddar (M)", preco: 21.00 },
+  { nome: "Charque c/ Queijo Coalho (P)", preco: 13.00 },
+  { nome: "Charque c/ Queijo Coalho (M)", preco: 19.00 },
+  // ----- FRANGO -----
+  { nome: "Frango (P)", preco: 6.00 },
+  { nome: "Frango (M)", preco: 12.00 },
+  { nome: "Frango c/ Catupiry (P)", preco: 8.00 },
+  { nome: "Frango c/ Catupiry (M)", preco: 18.00 },
+  { nome: "Frango Cream Cheese (P)", preco: 13.00 },
+  { nome: "Frango Cream Cheese (M)", preco: 19.00 },
+  { nome: "Frango c/ Queijo Muçarela (P)", preco: 10.00 },
+  { nome: "Frango c/ Queijo Muçarela (M)", preco: 16.00 },
+  { nome: "Frango Mista (P)", preco: 15.00 },
+  { nome: "Frango Mista (M)", preco: 21.00 },
+  { nome: "Frango c/ Cheddar (P)", preco: 13.00 },
+  { nome: "Frango c/ Cheddar (M)", preco: 19.00 },
+  { nome: "Frango c/ Banana da Terra e Queijo (P)", preco: 15.00 },
+  { nome: "Frango c/ Banana da Terra e Queijo (M)", preco: 21.00 },
+  { nome: "Frango Especial (P)", preco: 17.00 },
+  { nome: "Frango Especial (M)", preco: 23.00 },
+  // ----- CALABRESA DEFUMADA -----
+  { nome: "Calabresa (P)", preco: 10.00 },
+  { nome: "Calabresa (M)", preco: 16.00 },
+  { nome: "Calabresa c/ Queijo Coalho (P)", preco: 12.00 },
+  { nome: "Calabresa c/ Queijo Coalho (M)", preco: 18.00 },
+  { nome: "Calabresa c/ Queijo Muçarela (P)", preco: 13.00 },
+  { nome: "Calabresa c/ Queijo Muçarela (M)", preco: 19.00 },
+  { nome: "Calabresa c/ Catupiry (P)", preco: 12.00 },
+  { nome: "Calabresa c/ Catupiry (M)", preco: 18.00 },
+  { nome: "Calabresa c/ Cheddar (P)", preco: 13.00 },
+  { nome: "Calabresa c/ Cheddar (M)", preco: 19.00 },
+  { nome: "Pizza (M)", preco: 14.00 },
+  { nome: "Pizza (P)", preco: 8.00 },
+  { nome: "Pizza Calabresa (P)", preco: 12.00 },
+  { nome: "Pizza Calabresa (M)", preco: 18.00 },
+  // -- Tradicionais --
+  { nome: "Queijo e presunto P", preco: 6.00 },
+  { nome: "Queijo e presunto M", preco: 12.00 },
+  { nome: "Frango P", preco: 6.00 },
+  { nome: "Frango M", preco: 12.00 },
+  { nome: "Queijo coalho P", preco: 6.00 },
+  { nome: "Queijo coalho M", preco: 12.00 },
+  { nome: "Queijo Muçarela P", preco: 7.00 },
+  { nome: "Queijo Muçarela M", preco: 13.00 },
+  { nome: "Carne P", preco: 6.00 },
+  { nome: "Carne M", preco: 12.00 },
+  { nome: "Coxinha", preco: 3.50 },
+
+    // -- Pastelão  --
+  { nome: "Mega de Frango", preco: 25.00 },
+  { nome: "Mega de Frango c/ Queijo", preco: 28.00 },
+  { nome: "Mega de Frango c/ Queijo e Catupiry", preco: 29.00 },
+  { nome: "Mega de Frango c/ Queijo, Catupiry e Cheddar", preco: 30.00 },
+  { nome: "Mega de Carne", preco: 25.00 },
+  { nome: "Mega de Carne c/ Queijo", preco: 28.00 },
+  { nome: "Mega de Carne c/ Queijo e Catupiry", preco: 29.00 },
+  { nome: "Mega de Carne c/ Queijo, catupiry e cheddar", preco: 30.00 },
+  { nome: "Mega de Pizza", preco: 25.00 },
+  { nome: "Mega de Pizza Calabresa", preco: 28.00 },
+  { nome: "Mega de Carne do sol c/ Queijo", preco: 30.00 },
+  { nome: "Mega de Carne Especial", preco: 38.00 },
+  { nome: "Mega de Frango Especial", preco: 38.00 },
+  
+  // ----- QUEIJOS -----
+  { nome: "3 Queijos (P)", preco: 10.00 },
+  { nome: "3 Queijos (M)", preco: 16.00 },
+  { nome: "4 Queijos (P)", preco: 12.00 },
+  { nome: "4 Queijos (M)", preco: 18.00 },
+  { nome: "5 Queijos (P)", preco: 14.00 },
+  { nome: "5 Queijos (M)", preco: 20.00 },
+  // ----- MARISCOS -----
+  { nome: "Aratu", preco: 12.00 },
+  { nome: "Filé de Camarão", preco: 10.00 },
+  { nome: "Filé de Camarão c/ Catupiry", preco: 12.00 },
+  { nome: "Filé de Camarão c/ Cream Cheese", preco: 15.00 },
+  { nome: "Filé de Camarão c/ Cheddar", preco: 15.00 },
+  { nome: "Filé de Camarão c/ Muçarela", preco: 15.00 },
+  // ----- DOCES -----
+  { nome: "Romeu e Julieta", preco: 8.00 },
+  { nome: "Banana Real", preco: 10.00 },
+  { nome: "Banana Real c/ Chocolate", preco: 12.00 },
+  { nome: "Pastel Chocolate", preco: 10.00 },
+  { nome: "Pastel Chocolate c/ Queijo Coalho", preco: 12.00 },
+  { nome: "Pastel Chocolate c/ Morango", preco: 15.00 },
+  { nome: "Pastel Doce de Leite", preco: 8.00 },
+  { nome: "Pastel Doce de Leite c/ Chocolate", preco: 12.00 },
+  { nome: "Pastel Doce de Leite c/ Banana da Terra", preco: 10.00 },
+  { nome: "Pastel Doce de Leite c/ Queijo Coalho", preco: 10.00 },
+  { nome: "Pastel Churros", preco: 8.00 },
+  { nome: "Pastel Ninho c/ Nutella", preco: 15.00 },
+  { nome: "Pastel Nutella", preco: 15.00 },
+  { nome: "Pastel de Paçoca", preco: 12.00 },
+  // -- Brotinhos Tradicionais --
+  { nome: "Brotinho de Misto", preco: 13.00 },
+  { nome: "Brotinho de Calabresa", preco: 13.00 },
+  { nome: "Brotinho de Muçarela", preco: 13.00 },
+  { nome: "Brotinho de Frango", preco: 13.00 },
+  // -- Brotinhos Especiais --
+  { nome: "Brotinho de Frango com cheddar", preco: 13.00 },
+  { nome: "Brotinho de Charque", preco: 13.00 },
+  { nome: "Brotinho de 4 Queijos", preco: 13.00 },
+  { nome: "Brotinho de Frango Mista", preco: 13.00 },
+  { nome: "Brotinho de Calabresa com catupiry", preco: 13.00 },
+  // -- Brotinhos Camarão --
+  { nome: "Brotinho de Camarao", preco: 13.00 },
+  { nome: "Brotinho de camarao com cream chesse", preco: 13.00 },
+  { nome: "Brotinho de camarao com catupiry", preco: 13.00 },
+  { nome: "Brotinho de camarao com cheddar", preco: 13.00 },
+  // -- Brotinhos Doces
+  { nome: "Brotinho de Romeu e Julieta", preco: 13.00 },
+  { nome: "Brotinho de Choconinho", preco: 13.00 },
+  { nome: "Brotinho de Brigadeiro", preco: 13.00 },
+  { nome: "Brotinho de Doce de leite com chocolate", preco: 13.00 },
+  // -- Bebidas --
+  { nome: "Agua", preco: 3.00 },
+  { nome: "Agua c/ Gás", preco: 5.00 },
+  { nome: "H2O", preco: 8.00 },
+  { nome: "Refri lata", preco: 6.00 },
+  { nome: "Refri litro", preco: 10.00 },
+  // ----- SUCOS DE POLPA - 400ML -----
+  { nome: "Suco de Abacaxi sem leite", preco: 6.00 },
+  { nome: "Suco de Abacaxi com leite", preco: 8.00 },
+  { nome: "Suco de Acerola sem leite", preco: 6.00 },
+  { nome: "Suco de Acerola com leite", preco: 8.00 },
+  { nome: "Suco de Ameixa sem leite", preco: 6.00 },
+  { nome: "Suco de Ameixa com leite", preco: 8.00 },
+  { nome: "Suco de Cacau sem leite", preco: 6.00 },
+  { nome: "Suco de Cacau com leite", preco: 8.00 },
+  { nome: "Suco de Cajá sem leite", preco: 6.00 },
+  { nome: "Suco de Cajá com leite", preco: 8.00 },
+  { nome: "Suco de Caju sem leite", preco: 6.00 },
+  { nome: "Suco de Caju com leite", preco: 8.00 },
+  { nome: "Suco de Cupuaçu sem leite", preco: 6.00 },
+  { nome: "Suco de Cupuaçu com leite", preco: 8.00 },
+  { nome: "Suco de Goiaba sem leite", preco: 6.00 },
+  { nome: "Suco de Goiaba com leite", preco: 8.00 },
+  { nome: "Suco de Graviola sem leite", preco: 6.00 },
+  { nome: "Suco de Graviola com leite", preco: 8.00 },
+  { nome: "Suco de Manga sem leite", preco: 6.00 },
+  { nome: "Suco de Manga com leite", preco: 8.00 },
+  { nome: "Suco de Maracujá sem leite", preco: 6.00 },
+  { nome: "Suco de Maracujá com leite", preco: 8.00 },
+  { nome: "Suco de Morango sem leite", preco: 6.00 },
+  { nome: "Suco de Morango com leite", preco: 8.00 },
+  { nome: "Suco de Tamarindo sem leite", preco: 6.00 },
+  { nome: "Suco de Tamarindo com leite", preco: 8.00 },
+  { nome: "Suco de Umbu sem leite", preco: 6.00 },
+  { nome: "Suco de Umbu com leite", preco: 8.00 },
+  { nome: "Suco de Umbu Cajá sem leite", preco: 6.00 },
+  { nome: "Suco de Umbu Cajá com leite", preco: 8.00 },
+  { nome: "Suco de Mangaba sem leite", preco: 6.00 },
+  { nome: "Suco de Mangaba com leite", preco: 8.00 },
+  { nome: "Suco de Jenipapo sem leite", preco: 6.00 },
+  { nome: "Suco de Jenipapo com leite", preco: 8.00 },
+  // ----- BOMBA BAHIANA - SUCO ENERGÉTICO (500ML) -----
+  { nome: "Bomba Bahiana Abacaxi c/ Hortelã", preco: 8.00 },
+  { nome: "Bomba Bahiana Acerola c/ Gengibre", preco: 8.00 },
+  { nome: "Bomba Bahiana Amendoim", preco: 10.00 },
+  { nome: "Bomba Bahiana Guaraná", preco: 10.00 },
+  { nome: "Bomba Bahiana Mista", preco: 12.00 }
+        ];
+
+        function renderAllTables() {
+            const inProgress = orders.filter(o => o.status === 'in_progress');
+            const finished = orders.filter(o => o.status === 'finished').sort((a, b) => new Date(b.finishedDate) - new Date(a.finishedDate)).slice(0, 10);
+
+            renderTable('inProgressTable', inProgress);
+            renderTable('finishedTable', finished);
+            updateDailyEarnings();
+            updateMonthlyEarningsDisplay();
+        }
+
+        function renderTable(id, data) {
+            const container = document.getElementById(id);
+            if (data.length === 0) {
+                container.innerHTML = '<div class="table-empty">Nenhum pedido encontrado</div>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(order => {
+                const total = calculateTotal(order.items);
+                html += `
+                    <div class="table-row" onclick="openRightPanel(${order.id})">
+                        <div class="table-id">#${order.orderNumber}</div>
+                        <div>
+                            <div class="table-client">${order.clientName}</div>
+                            <div class="table-items">${order.items.length} itens • ${order.attendant}</div>
+                        </div>
+                        <div style="font-size: 12px; color: #999;">${new Date(order.createdAt).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</div>
+                        <div class="table-price">R$ ${total}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openRightPanel(id) {
+            selectedOrder = orders.find(o => o.id === id);
+            document.getElementById('rightPanel').classList.add('active');
+            renderRightPanel();
+        }
+
+        function closeRightPanel() {
+            document.getElementById('rightPanel').classList.remove('active');
+            selectedOrder = null;
+        }
+
+        function renderRightPanel() {
+            if (!selectedOrder) return;
+            const panelContent = document.getElementById('rightPanelContent');
+            const total = calculateTotal(selectedOrder.items);
+
+            let itemsHtml = '';
+            selectedOrder.items.forEach(item => {
+                itemsHtml += `
+                    <div class="item-row">
+                        <div>
+                            <div class="item-name">${item.quantity}x ${item.itemName}</div>
+                            <div class="item-price">R$ ${item.unitPrice.toFixed(2)} cada</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="font-weight:800; color:var(--secondary);">R$ ${(item.quantity * item.unitPrice).toFixed(2)}</div>
+                            ${selectedOrder.status === 'in_progress' ? `<button class="item-remove-btn" onclick="removeItem(${item.id})"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>Pedido:</strong> #${selectedOrder.orderNumber}</p>
+                    <p><strong>Cliente:</strong> <span id="clientNameDisplay">${selectedOrder.clientName}</span> 
+                        <button onclick="editClientName()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:14px; margin-left:5px;"><i class="fas fa-edit"></i></button>
+                    </p>
+                    <p><strong>Atendente:</strong> ${selectedOrder.attendant}</p>
+                    ${selectedOrder.comment ? `<p><strong>Obs:</strong> ${selectedOrder.comment}</p>` : ''}
+                </div>
+
+                <div class="section-title">Itens do Pedido</div>
+                <div class="items-list">${itemsHtml || '<div style="padding:15px;text-align:center;color:#999;">Nenhum item</div>'}</div>
+
+                ${selectedOrder.status === 'in_progress' ? `
+                    <div class="search-container">
+                        <input type="text" id="searchPastel" class="search-input" placeholder="🔍 Pesquisar pastel..." oninput="renderPasteisList(this.value)">
+                        <div id="pasteisListContainer" class="pasteis-list"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
+                        <input type="text" id="itemName" placeholder="Nome do item manual">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="number" id="itemQty" value="1" min="1">
+                            <input type="number" id="itemPrice" value="0" step="0.01">
+                        </div>
+                        <button class="btn" style="margin-top:0;" onclick="addItem()">+ Adicionar</button>
+                    </div>
+                ` : ''}
+
+                <div class="total-box">Total: R$ ${total}</div>
+
+                <div class="panel-buttons">
+                    ${selectedOrder.status === 'in_progress' ? `<button class="btn success" onclick="finishOrder()">✓ Fechar Comanda</button>` : ''}
+                    <button class="btn" onclick="printReceipt(selectedOrder)">🖨️ Imprimir Comanda</button>
+                    <button class="btn danger" onclick="deleteOrder()">Deletar Pedido</button>
+                </div>
+            `;
+            panelContent.innerHTML = html;
+        }
+
+        function renderPasteisList(searchTerm) {
+            const listContainer = document.getElementById('pasteisListContainer');
+            const termo = searchTerm.toLowerCase().trim();
+            if (!termo) { listContainer.classList.remove('active'); return; }
+            
+            const filtrados = pasteis.filter(p => p.nome.toLowerCase().includes(termo));
+            if (filtrados.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999;">Nenhum encontrado</div>';
+            } else {
+                let html = '';
+                filtrados.forEach(p => {
+                    html += `<div class="pastel-item" onclick="selectPastelFromList('${p.nome.replace(/'/g, "\\'")}', ${p.preco})">
+                        <span class="pastel-item-name">${p.nome}</span>
+                        <span class="pastel-item-price">R$ ${p.preco.toFixed(2)}</span>
+                    </div>`;
+                });
+                listContainer.innerHTML = html;
+            }
+            listContainer.classList.add('active');
+        }
+
+        function selectPastelFromList(nome, preco) {
+            document.getElementById('itemName').value = nome;
+            document.getElementById('itemPrice').value = preco.toFixed(2);
+            document.getElementById('itemQty').value = 1;
+            document.getElementById('pasteisListContainer').classList.remove('active');
+            document.getElementById('searchPastel').value = '';
+        }
+
+        // Fecha a lista de pesquisa ao clicar fora
+        document.addEventListener('click', function(e) {
+            const container = document.querySelector('.search-container');
+            const list = document.getElementById('pasteisListContainer');
+            if (container && !container.contains(e.target) && list) {
+                list.classList.remove('active');
+            }
+        });
+
+        function getEarningDayRange() {
+            const nowBR = getBrasiliaTime();
+            const today10AM = new Date(nowBR);
+            today10AM.setHours(10, 0, 0, 0);
+
+            let start, end;
+            if (nowBR >= today10AM) {
+                start = today10AM;
+                end = new Date(today10AM);
+                end.setDate(end.getDate() + 1);
+            } else {
+                start = new Date(today10AM);
+                start.setDate(start.getDate() - 1);
+                end = today10AM;
+            }
+            return { start, end };
+        }
+
+        function checkMonthlyReset() {
+            const nowBR = getBrasiliaTime();
+            const currentMonth = nowBR.getMonth();
+            const lastReset = new Date(lastMonthlyReset);
+            if (currentMonth !== lastReset.getMonth()) {
+                monthlyEarnings = 0;
+                lastMonthlyReset = nowBR.toISOString().split('T')[0];
+                saveToLocalStorage();
+            }
+        }
+
+        function updateMonthlyEarningsDisplay() { document.getElementById('monthlyEarningsAmount').textContent = monthlyEarnings.toFixed(2); }
+        function updateMonthlyEarnings(amount) { monthlyEarnings += amount; saveToLocalStorage(); updateMonthlyEarningsDisplay(); }
+
+        function updateDailyEarnings() {
+            const range = getEarningDayRange();
+            const todayEarnings = orders
+                .filter(o => {
+                    if (o.status !== 'finished' || !o.finishedDate) return false;
+                    const finishDateBR = getBrasiliaTime(new Date(o.finishedDate));
+                    return finishDateBR >= range.start && finishDateBR < range.end;
+                })
+                .reduce((sum, o) => sum + parseFloat(calculateTotal(o.items)), 0);
+            document.getElementById('dailyEarningsAmount').textContent = todayEarnings.toFixed(2);
+        }
+
+        function showDailyEarnings() { alert(`Ganhos do período atual (das 10h às 10h): R$ ${document.getElementById('dailyEarningsAmount').textContent}`); }
+        function showMonthlyEarnings() { alert(`Ganhos totais do mês atual: R$ ${monthlyEarnings.toFixed(2)}`); }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('orders', JSON.stringify(orders));
+            localStorage.setItem('nextOrderId', nextOrderId.toString());
+            localStorage.setItem('monthlyEarnings', monthlyEarnings.toString());
+            localStorage.setItem('lastMonthlyReset', lastMonthlyReset);
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('orders');
+            const savedId = localStorage.getItem('nextOrderId');
+            if (saved) { try { orders = JSON.parse(saved); } catch (e) {} }
+            if (savedId) nextOrderId = parseInt(savedId);
+            const savedME = localStorage.getItem('monthlyEarnings');
+            const savedLMR = localStorage.getItem('lastMonthlyReset');
+            if (savedME) monthlyEarnings = parseFloat(savedME);
+            if (savedLMR) lastMonthlyReset = savedLMR;
+            checkMonthlyReset();
+        }
+
+        function openNewOrderModal() { document.getElementById('newOrderModal').classList.add('active'); }
+        function closeNewOrderModal() { document.getElementById('newOrderModal').classList.remove('active'); }
+
+        function handleCreateOrder() {
+            const client = document.getElementById('cliente').value || 'Cliente';
+            const attendant = document.getElementById('atendente').value;
+            const comment = document.getElementById('comentario').value;
+
+            const newOrder = {
+                id: Date.now(),
+                orderNumber: nextOrderId++,
+                clientName: client,
+                attendant: attendant,
+                comment: comment,
+                items: [],
+                status: 'in_progress',
+                createdAt: new Date().toISOString()
+            };
+
+            orders.push(newOrder);
+            saveToLocalStorage();
+            renderAllTables();
+            closeNewOrderModal();
+            openRightPanel(newOrder.id);
+            
+            document.getElementById('cliente').value = '';
+            document.getElementById('comentario').value = '';
+        }
+
+        function addItem() {
+            if (!selectedOrder) return;
+            const name = document.getElementById('itemName').value;
+            const qty = parseInt(document.getElementById('itemQty').value) || 1;
+            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+
+            if (!name) { alert('Digite o nome do item'); return; }
+
+            selectedOrder.items.push({ id: Date.now(), itemName: name, quantity: qty, unitPrice: price });
+            saveToLocalStorage();
+            renderRightPanel();
+            renderAllTables();
+        }
+
+        function removeItem(id) {
+            selectedOrder.items = selectedOrder.items.filter(i => i.id !== id);
+            saveToLocalStorage();
+            renderRightPanel();
+            renderAllTables();
+        }
+
+        function editClientName() {
+            if (!selectedOrder) return;
+            const newName = prompt("Editar nome do cliente:", selectedOrder.clientName);
+            if (newName !== null && newName.trim() !== "") {
+                selectedOrder.clientName = newName.trim();
+                saveToLocalStorage();
+                renderRightPanel();
+                renderAllTables();
+            }
+        }
+
+        function calculateTotal(items) { return items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0).toFixed(2); }
+
+        function finishOrder() {
+            selectedOrder.status = 'finished';
+            selectedOrder.finishedDate = new Date().toISOString();
+            updateMonthlyEarnings(parseFloat(calculateTotal(selectedOrder.items)));
+            saveToLocalStorage();
+            updateDailyEarnings();
+            renderAllTables();
+            closeRightPanel();
+        }
+
+        function deleteOrder() {
+            if (confirm('Tem certeza que deseja deletar este pedido?')) {
+                orders = orders.filter(o => o.id !== selectedOrder.id);
+                saveToLocalStorage();
+                renderAllTables();
+                closeRightPanel();
+            }
+        }
+
+        function printReceipt(order) {
+            const total = calculateTotal(order.items);
+            const date = new Date().toLocaleDateString('pt-BR');
+            const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `<div style="display:flex; justify-content:space-between; margin: 5px 0;">
+                    <span>${item.quantity}x ${item.itemName}</span>
+                    <span>R$ ${(item.quantity * item.unitPrice).toFixed(2)}</span>
+                </div>`;
+            });
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <style>
+                        @page { size: 57mm auto; margin: 0; }
+                        body { font-family: Arial, sans-serif; width: 57mm; padding: 2mm; font-size: 15px; line-height: 1.3; font-weight: bold; }
+                        .header { text-align: center; font-weight: bold; font-size: 20px; margin-bottom: 10px; }
+                        .sep { border-top: 1px dashed #000; margin: 8px 0; }
+                        .total { font-size: 22px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 10px; }
+                        .item-name { font-size: 16px; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">PASTEL DA HORA</div>
+                    <div style="text-align:center; font-size:12px;">${date} - ${time}</div>
+                    <div class="sep"></div>
+                    <div><strong>PEDIDO #${order.orderNumber}</strong></div>
+                    <div>Cliente: ${order.clientName}</div>
+                    <div>Atendente: ${order.attendant}</div>
+                    <div class="sep"></div>
+                    ${itemsHtml}
+                    <div class="sep"></div>
+                    <div class="total">
+                        <span>TOTAL</span>
+                        <span>R$ ${total}</span>
+                    </div>
+                    <div class="sep"></div>
+                    <div style="text-align:center; margin-top:10px; font-size:12px;">Obrigado pela preferência!</div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+            printWindow.onafterprint = function() { printWindow.close(); };
+
+        }
+
+        // Inicialização
+        loadFromLocalStorage();
+        renderAllTables();
+    </script>
+</body>
+</html>
